@@ -1,0 +1,27 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Add Internet Identity Authentication",
+  "requirements": [
+    {
+      "id": "REQ-18",
+      "summary": "Integrate Internet Identity authentication with login/logout UI in the sidebar, displaying user principal when authenticated and restricting access appropriately",
+      "acceptanceCriteria": [
+        "A 'Login with Internet Identity' button is visible when the user is not authenticated.",
+        "Clicking the login button opens the Internet Identity authentication flow.",
+        "After successful login, the user's authenticated state is reflected in the UI (e.g., principal shown or welcome message).",
+        "A 'Logout' button is available when the user is authenticated.",
+        "Clicking logout clears the session and returns the user to the unauthenticated state.",
+        "The useActor hook uses the authenticated identity so backend calls are made on behalf of the logged-in principal.",
+        "The existing useInternetIdentity hook and useActor hook are used without modification."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Add authentication UI to the sidebar by importing and using the useInternetIdentity hook. When the user is not authenticated, display a 'Login with Internet Identity' button in the sidebar footer or header area. When authenticated, show a user indicator (truncated principal or welcome message) and a 'Logout' button. Wire the login button to call the login function from useInternetIdentity, and the logout button to call the logout function. Ensure the UI reflects the isAuthenticated state from the hook."
+        }
+      ]
+    }
+  ]
+}

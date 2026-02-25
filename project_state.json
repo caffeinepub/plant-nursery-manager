@@ -1,0 +1,217 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 9,
+  "summary": "Plant Nursery business management app to track daily sales, stock movement, expenditure, profit analysis, and billing. Supports multi-user sales entry from respective mobile devices.",
+  "architectural_notes": [
+    "Multi-user support required: 2+ users must be able to enter sales concurrently from their own mobile devices.",
+    "Internet Identity authentication planned for secure per-user login."
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-build-a-dashboard-screen-that-displays-today-s-summary-cards-total-sales-amount-number-of-transactions-total-expenditure-and-net-profit-for-today-include-a-recent-transactions-list-and-low-stock-alerts-for-plants-below-a-configurable-threshold",
+      "title": "Build a Dashboard screen that displays today's summary cards: total sales amount, number of transactions, total expenditure, and net profit for today. Include a recent transactions list and low-stock alerts for plants below a configurable threshold.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-a-sales-screen-with-a-form-to-record-a-new-sale-add-multiple-line-items-from-inventory-select-payment-method-submit-and-a-table-listing-all-sales-records-with-date-range-filtering-and-a-daily-total",
+      "title": "Build a Sales screen with a form to record a new sale (add multiple line items from inventory, select payment method, submit), and a table listing all sales records with date-range filtering and a daily total.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-an-inventory-stock-movement-screen-showing-the-current-stock-list-plant-name-category-quantity-cost-price-selling-price-include-a-form-to-add-new-plants-and-a-form-to-record-stock-in-or-stock-out-movements-display-a-movement-history-log-per-plant",
+      "title": "Build an Inventory & Stock Movement screen showing the current stock list (plant name, category, quantity, cost price, selling price). Include a form to add new plants and a form to record stock-in or stock-out movements. Display a movement history log per plant.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-an-expenditure-screen-with-a-form-to-add-new-expenditure-entries-date-category-description-amount-and-a-table-listing-all-expenditures-with-filtering-by-date-range-and-category-plus-a-period-total",
+      "title": "Build an Expenditure screen with a form to add new expenditure entries (date, category, description, amount) and a table listing all expenditures with filtering by date range and category, plus a period total.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-a-profit-analysis-screen-with-a-date-range-selector-that-displays-total-revenue-total-cogs-gross-profit-total-expenditure-and-net-profit-in-summary-cards-include-a-simple-bar-chart-comparing-revenue-vs-expenditure-over-the-selected-period-broken-down-by-day-or-month",
+      "title": "Build a Profit Analysis screen with a date-range selector that displays: total revenue, total COGS, gross profit, total expenditure, and net profit in summary cards. Include a simple bar chart comparing revenue vs expenditure over the selected period broken down by day or month.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-a-billing-invoices-screen-with-a-form-to-create-a-new-invoice-customer-name-phone-line-items-from-inventory-discount-tax-a-list-of-all-invoices-showing-invoice-number-customer-date-amount-and-payment-status-and-the-ability-to-mark-invoices-as-paid-each-invoice-should-be-printable-viewable-in-a-clean-formatted-layout",
+      "title": "Build a Billing & Invoices screen with a form to create a new invoice (customer name, phone, line items from inventory, discount, tax), a list of all invoices showing invoice number, customer, date, amount, and payment status, and the ability to mark invoices as paid. Each invoice should be printable/viewable in a clean formatted layout.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-cohesive-visual-theme-throughout-the-app-inspired-by-nature-and-botanical-aesthetics-earthy-greens-and-warm-terracotta-tones-clean-sans-serif-typography-card-based-layouts-with-subtle-leaf-or-botanical-accent-motifs-and-a-sidebar-navigation-with-icons-for-dashboard-sales-inventory-expenditure-profit-analysis-and-billing",
+      "title": "Apply a cohesive visual theme throughout the app inspired by nature and botanical aesthetics: earthy greens and warm terracotta tones, clean sans-serif typography, card-based layouts with subtle leaf or botanical accent motifs, and a sidebar navigation with icons for Dashboard, Sales, Inventory, Expenditure, Profit Analysis, and Billing.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-and-render-a-botanical-logo-image-for-the-app-header-a-simple-illustrated-potted-plant-or-seedling-with-leaves-and-a-dashboard-hero-background-with-a-soft-blurred-nursery-greenhouse-texture",
+      "title": "Generate and render a botanical logo image for the app header — a simple illustrated potted plant or seedling with leaves — and a dashboard hero background with a soft blurred nursery/greenhouse texture.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-sales-screen-new-sale-dialog-form-to-include-three-additional-input-fields-customer-name-text-input-mobile-number-text-input-with-numeric-keyboard-hint-and-customer-photo-a-camera-capture-control-that-opens-the-device-camera-previews-the-captured-image-and-stores-it-as-a-base64-string-all-three-fields-are-optional-display-customer-name-and-mobile-in-the-sales-records-table-where-applicable",
+      "title": "Update the Sales screen new-sale dialog form to include three additional input fields: Customer Name (text input), Mobile Number (text input with numeric keyboard hint), and Customer Photo (a camera capture control that opens the device camera, previews the captured image, and stores it as a base64 string). All three fields are optional. Display customer name and mobile in the sales records table where applicable.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-pdf-invoice-export-feature-to-the-sales-screen-each-row-in-the-sales-records-table-should-have-an-export-pdf-action-button-when-clicked-it-generates-and-downloads-a-formatted-pdf-invoice-for-that-sale-including-sale-date-sale-id-customer-name-and-mobile-if-present-customer-photo-if-present-line-items-plant-name-quantity-unit-price-subtotal-payment-method-and-grand-total-use-a-client-side-pdf-generation-library-e-g-jspdf-with-jspdf-autotable-to-produce-the-pdf-entirely-in-the-browser-without-any-backend-call",
+      "title": "Add a PDF invoice export feature to the Sales screen. Each row in the sales records table should have an 'Export PDF' action button. When clicked, it generates and downloads a formatted PDF invoice for that sale, including: sale date, sale ID, customer name and mobile (if present), customer photo (if present), line items (plant name, quantity, unit price, subtotal), payment method, and grand total. Use a client-side PDF generation library (e.g., jsPDF with jspdf-autotable) to produce the PDF entirely in the browser without any backend call.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-deploy-the-full-stack-plant-nursery-manager-application-backend-motoko-canister-and-frontend-react-app-to-the-internet-computer-mainnet-so-it-is-publicly-accessible",
+      "title": "Deploy the full-stack Plant Nursery Manager application (backend Motoko canister and frontend React app) to the Internet Computer mainnet so it is publicly accessible.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-integrate-internet-identity-authentication-into-the-frontend-add-a-login-logout-button-in-the-sidebar-or-header-using-the-existing-useinternetidentity-hook-when-logged-out-display-a-login-prompt-or-restrict-access-to-authenticated-users-only-when-logged-in-show-the-user-s-principal-or-a-welcome-indicator-and-a-logout-button",
+      "title": "Integrate Internet Identity authentication into the frontend. Add a login/logout button in the sidebar or header using the existing useInternetIdentity hook. When logged out, display a login prompt or restrict access to authenticated users only. When logged in, show the user's principal or a welcome indicator and a logout button.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Daily sales tracking",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Stock movement tracking",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Expenditure tracking",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Profit analysis dashboard",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Billing and invoicing",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Create a backend data model and API for daily sales records, including fields: date, list of items sold (plant name, quantity, unit price), total amount, and payment method (cash/card/UPI).",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Create a backend data model and API for plant inventory/stock, including fields: plant name, category, unit, current stock quantity, cost price, and selling price. Support stock-in and stock-out movement entries with date, quantity, reason (purchase/sale/loss/adjustment), and notes.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Create a backend data model and API for expenditure records, including fields: date, category (rent, labour, supplies, transport, utilities, other), description, and amount.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Create a backend API for profit analysis that computes total revenue from sales, total expenditure, gross profit (revenue minus cost of goods sold), and net profit (gross profit minus total expenditure) for a given date range.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Create a backend data model and API for billing/invoices, including fields: invoice number (auto-generated), date, customer name, customer phone, list of line items (plant name, quantity, unit price), subtotal, discount, tax, grand total, and payment status (paid/unpaid).",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Add customer name, camera photo capture, and mobile number fields to the Sales screen when recording a sale.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Add invoice PDF export feature to the Sales screen so users can generate and download/print a PDF invoice for each sale.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Extend the backend SaleRecord data type to include three new optional fields: customerName (Text), customerMobile (Text), and customerPhoto (Text, storing a base64-encoded image string). Update the addSale API to accept and persist these fields. Update getSales and any related query responses to return them.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Support multi-user concurrent sales entry so 2 or more users can record sales simultaneously from their respective mobile devices.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Add Internet Identity authentication so each user has a secure, separate login.",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Plant Nursery Manager",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-25T08:41:07.351Z",
+  "summary": "The diff implements Internet Identity authentication UI in the sidebar (Layout.tsx) using the useInternetIdentity hook, showing login/logout buttons and a truncated principal. Most REQ-18 acceptance criteria appear to be met. However, there is no evidence that the useActor hook integration with the authenticated identity was addressed.",
+  "missing_requirements": [
+    {
+      "id": "REQ-18",
+      "requirement": "The useActor hook uses the authenticated identity so backend calls are made on behalf of the logged-in principal.",
+      "reason": "The diff only modifies Layout.tsx to add login/logout UI using useInternetIdentity. There is no evidence in the diff that useActor was wired up or that any component/page was updated to pass the authenticated identity to useActor for authenticated backend calls.",
+      "evidence": [
+        "frontend/src/components/Layout.tsx",
+        "frontend-file-summaries.txt"
+      ]
+    }
+  ],
+  "hallucinated_features": [],
+  "confidence": 0.75,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/components/Layout.tsx",
+    "project_state.json"
+  ]
+}

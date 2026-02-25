@@ -1,0 +1,6 @@
+{
+  "frontend/src/components/Layout.tsx": "Sidebar layout component with navigation links, nursery branding, sticky header, footer with attribution, and Internet Identity authentication UI in the sidebar footer — showing a login button when unauthenticated and a truncated principal with a logout button when authenticated.",
+  "frontend/src/pages/Sales.tsx": "Sales page with customer name/mobile/photo fields, native getUserMedia camera capture, file upload fallback, sales history table with customer info display, and client-side PDF invoice export via CDN-loaded jsPDF. Exports `Sales` as both a named export and default export. Fixes the `window` type cast by using `(window as any)` instead of the invalid `Record<string, unknown>` cast.",
+  "frontend/src/App.tsx": "Restored to original working form with inline TanStack Router route definitions; imports `{ Sales }` as a named export matching the named export in Sales.tsx.",
+  "frontend/index.html": "HTML entry point with updated page title, meta description, Open Graph tags, theme color, and favicon pointing to the nursery logo asset for production deployment."
+}

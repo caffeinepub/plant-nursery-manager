@@ -1,0 +1,23 @@
+{
+  "backend/main.mo": "Motoko actor defining the nursery backend with data types and CRUD operations for sales records, inventory, stock movements, expenditures, invoices, and profit analysis using in-memory Maps.",
+  "feature_evidence.json": "Feature evidence report mapping the Internet Identity authentication feature (login/logout UI in sidebar) to its implementing file Layout.tsx and associated test ID REQ-18.",
+  "frontend-file-summaries.txt": "JSON document containing short human-readable summaries of key frontend source files including Layout, Sales, App, and index.html.",
+  "frontend/index.css": "Global Tailwind CSS entry point defining CSS custom property design tokens for light and dark themes including colors, sidebar, and chart variables.",
+  "frontend/index.html": "HTML shell for the React app with nursery-themed metadata, Open Graph tags, theme color, favicon, and the root div entry point.",
+  "frontend/src/App.tsx": "Defines the TanStack Router route tree wrapping all pages (Dashboard, Sales, Inventory, Expenditure, ProfitAnalysis, Billing, InvoiceView) inside the Layout component.",
+  "frontend/src/components/Layout.tsx": "Sidebar layout component with nursery branding, navigation links, and Internet Identity auth UI showing a login button when unauthenticated or a truncated principal with a logout button when authenticated.",
+  "frontend/src/hooks/useActor.ts": "Custom hook that creates and caches a backend actor via TanStack Query, using the current Internet Identity identity (or anonymous) and invalidating dependent queries when the identity changes.",
+  "frontend/src/hooks/useInternetIdentity.ts": "Provides the InternetIdentityProvider context and useInternetIdentity hook, managing AuthClient lifecycle, login/logout flow, identity persistence, and login status state.",
+  "frontend/src/hooks/useQueries.ts": "Provides React Query hooks for CRUD operations on sales records, inventory, stock movements, expenditures, and invoices, wrapping ICP actor calls with caching and invalidation logic.",
+  "frontend/src/index.css": "Global stylesheet that imports Google Fonts, sets up Tailwind directives, and defines a botanical-themed CSS variable palette for both light and dark modes including print styles.",
+  "frontend/src/main.tsx": "Application entry point that mounts the React app with QueryClientProvider and InternetIdentityProvider wrappers around the root App component.",
+  "frontend/src/pages/Billing.tsx": "Billing page that allows creating multi-line-item invoices with discount/tax, lists all invoices fetched by probing sequential invoice numbers, and supports filtering by payment status.",
+  "frontend/src/pages/Dashboard.tsx": "Dashboard page displaying today's sales totals, net profit, low-stock alerts, and recent transactions using stat cards and data derived from sales, inventory, and expenditure queries.",
+  "frontend/src/pages/Expenditure.tsx": "Expenditure page for logging and filtering business expenses by date range and category, showing a running total for the filtered period.",
+  "frontend/src/pages/Inventory.tsx": "Inventory page for adding plant items, recording stock movements (purchase/sale/adjustment), and viewing per-plant movement history via dialogs.",
+  "frontend/src/pages/InvoiceView.tsx": "Renders a single invoice detail page fetched by invoice number, displaying customer info, line items, totals, and payment status in a printable formatted layout with back/print actions.",
+  "frontend/src/pages/ProfitAnalysis.tsx": "Profit analysis page with a date-range selector that computes and displays revenue, COGS, gross profit, expenditure, and net profit metrics, plus a daily bar chart of revenue vs expenditure using Recharts.",
+  "frontend/src/pages/Sales.tsx": "Sales management page with a form to record new sales (multi-line items, payment method, customer info) and a table of all sales records, including lazy-loaded jsPDF/autotable for exporting individual invoices as PDFs.",
+  "frontend/tailwind.config.js": "Tailwind CSS configuration extending the default theme with custom fonts (Nunito, Playfair Display), OKLCH-based semantic color tokens, custom box shadows, border radii, and accordion keyframe animations.",
+  "project_state.json": "Project state manifest (version 9) describing the Plant Nursery business management app's architecture, existing features (dashboard, sales, inventory, expenditure, profit analysis, billing), requirements, and known issues."
+}

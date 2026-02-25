@@ -1,0 +1,24 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-integrate-internet-identity-authentication-into-the-frontend-add-a-login-logout-button-in-the-sidebar-or-header-using-the-existing-useinternetidentity-hook-when-logged-out-display-a-login-prompt-or-restrict-access-to-authenticated-users-only-when-logged-in-show-the-user-s-principal-or-a-welcome-indicator-and-a-logout-button",
+      "featureTitle": "Integrate Internet Identity authentication into the frontend. Add a login/logout button in the sidebar or header using the existing useInternetIdentity hook. When logged out, display a login prompt or restrict access to authenticated users only. When logged in, show the user's principal or a welcome indicator and a logout button.",
+      "files": [
+        "frontend/src/components/Layout.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "camera@1.0.0"
+      ],
+      "testIds": [
+        "REQ-18"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

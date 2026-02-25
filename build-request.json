@@ -1,0 +1,46 @@
+{
+  "kind": "build_request",
+  "title": "Add Internet Identity Authentication",
+  "projectName": "Plant Nursery Manager",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-18",
+      "text": "Integrate Internet Identity authentication into the frontend. Add a login/logout button in the sidebar or header using the existing useInternetIdentity hook. When logged out, display a login prompt or restrict access to authenticated users only. When logged in, show the user's principal or a welcome indicator and a logout button.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-8"
+        ],
+        "quotes": [
+          "Yes",
+          "Go live"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A 'Login with Internet Identity' button is visible when the user is not authenticated.",
+        "Clicking the login button opens the Internet Identity authentication flow.",
+        "After successful login, the user's authenticated state is reflected in the UI (e.g., principal shown or welcome message).",
+        "A 'Logout' button is available when the user is authenticated.",
+        "Clicking logout clears the session and returns the user to the unauthenticated state.",
+        "The useActor hook uses the authenticated identity so backend calls are made on behalf of the logged-in principal.",
+        "The existing useInternetIdentity hook and useActor hook are used without modification."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts — compose them as-is.",
+    "Do not modify frontend/src/main.tsx.",
+    "Authentication must use Internet Identity only — no third-party auth providers."
+  ],
+  "nonGoals": [
+    "Per-user data isolation or separate data namespaces in the backend.",
+    "Role-based access control or admin vs. regular user distinctions.",
+    "Email or password-based authentication."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}
