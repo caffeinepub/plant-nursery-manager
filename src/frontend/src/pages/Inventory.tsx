@@ -46,12 +46,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { MovementReason, UserRole } from "../backend";
+import { MovementReason } from "../backend";
 import type { InventoryItem, StockMovement } from "../backend";
+import { usePinRole } from "../hooks/usePinRole";
 import {
   useAddInventoryItem,
   useDeleteInventoryItem,
-  useGetCallerUserRole,
   useGetInventory,
   useGetStockMovements,
   useRecordStockMovement,
@@ -165,8 +165,8 @@ export default function Inventory() {
   const recordMovement = useRecordStockMovement();
   const updateItem = useUpdateInventoryItem();
   const deleteItem = useDeleteInventoryItem();
-  const { data: userRole } = useGetCallerUserRole();
-  const isOwner = userRole === UserRole.admin;
+  const { appRole } = usePinRole();
+  const isOwner = appRole === "owner";
 
   const [addOpen, setAddOpen] = useState(false);
   const [movementOpen, setMovementOpen] = useState(false);
@@ -326,282 +326,295 @@ export default function Inventory() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          {isOwner && (
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          )}
 
-          {/* Record Stock Movement */}
-          <Dialog open={movementOpen} onOpenChange={setMovementOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Record Movement
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Record Stock Movement</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div>
-                  <Label>Plant</Label>
-                  <Select
-                    value={movement.plantName}
-                    onValueChange={(v) =>
-                      setMovement((m) => ({ ...m, plantName: v }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select plant" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {inventory?.map((item) => (
-                        <SelectItem key={item.plantName} value={item.plantName}>
-                          {item.plantName} (Stock: {Number(item.currentStock)})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Movement Type</Label>
-                  <Select
-                    value={movement.reason}
-                    onValueChange={(v) =>
-                      setMovement((m) => ({
-                        ...m,
-                        reason: v as MovementReason,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={MovementReason.purchase}>
-                        <span className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-green-600" />
-                          Purchase (Stock In)
-                        </span>
-                      </SelectItem>
-                      <SelectItem value={MovementReason.loss}>
-                        <span className="flex items-center gap-2">
-                          <TrendingDown className="h-4 w-4 text-red-600" />
-                          Loss (Stock Out)
-                        </span>
-                      </SelectItem>
-                      <SelectItem value={MovementReason.adjustment}>
-                        <span className="flex items-center gap-2">
-                          <TrendingDown className="h-4 w-4 text-orange-600" />
-                          Adjustment (Stock Out)
-                        </span>
-                      </SelectItem>
-                      <SelectItem value={MovementReason.sale}>
-                        <span className="flex items-center gap-2">
-                          <TrendingDown className="h-4 w-4 text-blue-600" />
-                          Sale (Stock Out)
-                        </span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {isOutwardMovement(movement.reason) && (
-                    <p className="text-xs text-destructive mt-1">
-                      ⚠ This will reduce the current stock by the entered
-                      quantity.
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label>Quantity</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    placeholder="Enter quantity"
-                    value={movement.quantity}
-                    onChange={(e) =>
-                      setMovement((m) => ({ ...m, quantity: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label>Date</Label>
-                  <Input
-                    type="date"
-                    value={movement.date}
-                    onChange={(e) =>
-                      setMovement((m) => ({ ...m, date: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label>Notes</Label>
-                  <Input
-                    placeholder="Optional notes"
-                    value={movement.notes}
-                    onChange={(e) =>
-                      setMovement((m) => ({ ...m, notes: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <Button
-                  className="w-full"
-                  onClick={handleRecordMovement}
-                  disabled={
-                    recordMovement.isPending ||
-                    !movement.plantName ||
-                    !movement.quantity
-                  }
-                >
-                  {recordMovement.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
-                      Recording...
-                    </>
-                  ) : (
-                    "Record Movement"
-                  )}
+          {/* Record Stock Movement — owner only */}
+          {isOwner && (
+            <Dialog open={movementOpen} onOpenChange={setMovementOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Record Movement
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Record Stock Movement</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-2">
+                  <div>
+                    <Label>Plant</Label>
+                    <Select
+                      value={movement.plantName}
+                      onValueChange={(v) =>
+                        setMovement((m) => ({ ...m, plantName: v }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select plant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {inventory?.map((item) => (
+                          <SelectItem
+                            key={item.plantName}
+                            value={item.plantName}
+                          >
+                            {item.plantName} (Stock: {Number(item.currentStock)}
+                            )
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-          {/* Add Plant */}
-          <Dialog open={addOpen} onOpenChange={setAddOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Plant
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New Plant</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div>
-                  <Label>Plant Name</Label>
-                  <Input
-                    placeholder="e.g. Rose"
-                    value={newPlant.plantName}
-                    onChange={(e) =>
-                      setNewPlant((p) => ({ ...p, plantName: e.target.value }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Category</Label>
-                  <Select
-                    value={newPlant.category}
-                    onValueChange={(v) =>
-                      setNewPlant((p) => ({ ...p, category: v }))
+                  <div>
+                    <Label>Movement Type</Label>
+                    <Select
+                      value={movement.reason}
+                      onValueChange={(v) =>
+                        setMovement((m) => ({
+                          ...m,
+                          reason: v as MovementReason,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={MovementReason.purchase}>
+                          <span className="flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-green-600" />
+                            Purchase (Stock In)
+                          </span>
+                        </SelectItem>
+                        <SelectItem value={MovementReason.loss}>
+                          <span className="flex items-center gap-2">
+                            <TrendingDown className="h-4 w-4 text-red-600" />
+                            Loss (Stock Out)
+                          </span>
+                        </SelectItem>
+                        <SelectItem value={MovementReason.adjustment}>
+                          <span className="flex items-center gap-2">
+                            <TrendingDown className="h-4 w-4 text-orange-600" />
+                            Adjustment (Stock Out)
+                          </span>
+                        </SelectItem>
+                        <SelectItem value={MovementReason.sale}>
+                          <span className="flex items-center gap-2">
+                            <TrendingDown className="h-4 w-4 text-blue-600" />
+                            Sale (Stock Out)
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {isOutwardMovement(movement.reason) && (
+                      <p className="text-xs text-destructive mt-1">
+                        ⚠ This will reduce the current stock by the entered
+                        quantity.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Quantity</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder="Enter quantity"
+                      value={movement.quantity}
+                      onChange={(e) =>
+                        setMovement((m) => ({ ...m, quantity: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Date</Label>
+                    <Input
+                      type="date"
+                      value={movement.date}
+                      onChange={(e) =>
+                        setMovement((m) => ({ ...m, date: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Notes</Label>
+                    <Input
+                      placeholder="Optional notes"
+                      value={movement.notes}
+                      onChange={(e) =>
+                        setMovement((m) => ({ ...m, notes: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <Button
+                    className="w-full"
+                    onClick={handleRecordMovement}
+                    disabled={
+                      recordMovement.isPending ||
+                      !movement.plantName ||
+                      !movement.quantity
                     }
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    {recordMovement.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
+                        Recording...
+                      </>
+                    ) : (
+                      "Record Movement"
+                    )}
+                  </Button>
                 </div>
-                <div>
-                  <Label>Unit</Label>
-                  <Select
-                    value={newPlant.unit}
-                    onValueChange={(v) =>
-                      setNewPlant((p) => ({ ...p, unit: v }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {UNITS.map((u) => (
-                        <SelectItem key={u} value={u}>
-                          {u}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label>Initial Stock</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="0"
-                      value={newPlant.currentStock}
-                      onChange={(e) =>
-                        setNewPlant((p) => ({
-                          ...p,
-                          currentStock: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>Cost Price</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="₹0"
-                      value={newPlant.costPrice}
-                      onChange={(e) =>
-                        setNewPlant((p) => ({
-                          ...p,
-                          costPrice: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>Selling Price</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="₹0"
-                      value={newPlant.sellingPrice}
-                      onChange={(e) =>
-                        setNewPlant((p) => ({
-                          ...p,
-                          sellingPrice: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={handleAddPlant}
-                  disabled={
-                    addItem.isPending ||
-                    !newPlant.plantName ||
-                    !newPlant.category
-                  }
-                >
-                  {addItem.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
-                      Adding...
-                    </>
-                  ) : (
-                    "Add Plant"
-                  )}
+              </DialogContent>
+            </Dialog>
+          )}
+
+          {/* Add Plant — owner only */}
+          {isOwner && (
+            <Dialog open={addOpen} onOpenChange={setAddOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Plant
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add New Plant</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-2">
+                  <div>
+                    <Label>Plant Name</Label>
+                    <Input
+                      placeholder="e.g. Rose"
+                      value={newPlant.plantName}
+                      onChange={(e) =>
+                        setNewPlant((p) => ({
+                          ...p,
+                          plantName: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Category</Label>
+                    <Select
+                      value={newPlant.category}
+                      onValueChange={(v) =>
+                        setNewPlant((p) => ({ ...p, category: v }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Unit</Label>
+                    <Select
+                      value={newPlant.unit}
+                      onValueChange={(v) =>
+                        setNewPlant((p) => ({ ...p, unit: v }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UNITS.map((u) => (
+                          <SelectItem key={u} value={u}>
+                            {u}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label>Initial Stock</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={newPlant.currentStock}
+                        onChange={(e) =>
+                          setNewPlant((p) => ({
+                            ...p,
+                            currentStock: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Cost Price</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="₹0"
+                        value={newPlant.costPrice}
+                        onChange={(e) =>
+                          setNewPlant((p) => ({
+                            ...p,
+                            costPrice: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Selling Price</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="₹0"
+                        value={newPlant.sellingPrice}
+                        onChange={(e) =>
+                          setNewPlant((p) => ({
+                            ...p,
+                            sellingPrice: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={handleAddPlant}
+                    disabled={
+                      addItem.isPending ||
+                      !newPlant.plantName ||
+                      !newPlant.category
+                    }
+                  >
+                    {addItem.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
+                        Adding...
+                      </>
+                    ) : (
+                      "Add Plant"
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 
@@ -622,9 +635,11 @@ export default function Inventory() {
               <TableRow>
                 <TableHead>Plant Name</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Unit</TableHead>
+                {isOwner && <TableHead>Unit</TableHead>}
                 <TableHead className="text-right">Current Stock</TableHead>
-                <TableHead className="text-right">Cost Price (₹)</TableHead>
+                {isOwner && (
+                  <TableHead className="text-right">Cost Price (₹)</TableHead>
+                )}
                 <TableHead className="text-right">Selling Price (₹)</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
@@ -636,7 +651,7 @@ export default function Inventory() {
                     {item.plantName}
                   </TableCell>
                   <TableCell>{item.category}</TableCell>
-                  <TableCell>{item.unit}</TableCell>
+                  {isOwner && <TableCell>{item.unit}</TableCell>}
                   <TableCell className="text-right">
                     <span
                       className={
@@ -648,9 +663,11 @@ export default function Inventory() {
                       {Number(item.currentStock)}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    ₹{Number(item.costPrice)}
-                  </TableCell>
+                  {isOwner && (
+                    <TableCell className="text-right">
+                      ₹{Number(item.costPrice)}
+                    </TableCell>
+                  )}
                   <TableCell className="text-right">
                     ₹{Number(item.sellingPrice)}
                   </TableCell>

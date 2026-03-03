@@ -1,6 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -9,6 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -28,20 +40,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
+  ChevronDown,
   Download,
   FileText,
   Loader2,
   Plus,
-  RefreshCw,
   Trash2,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { PaymentMethod, UserRole } from "../backend";
+import { PaymentMethod } from "../backend";
 import type { SaleItem, SalesRecord } from "../backend";
+import { usePinRole } from "../hooks/usePinRole";
 import {
   useAddSale,
   useDeleteSale,
-  useGetCallerUserRole,
   useGetInventory,
   useGetSales,
   useGetSalesByPlant,
@@ -220,6 +232,83 @@ function generateInvoicePDF(sale: SalesRecord) {
   }
 }
 
+// ─── Searchable Plant Combobox ────────────────────────────────────────────────
+interface PlantOption {
+  plantName: string;
+  currentStock: number;
+}
+
+function PlantCombobox({
+  value,
+  onChange,
+  options,
+  placeholder,
+  ocidIndex,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: PlantOption[];
+  placeholder?: string;
+  ocidIndex: number;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const selected = options.find((o) => o.plantName === value);
+  const displayLabel = selected
+    ? `${selected.plantName} (Stock: ${selected.currentStock})`
+    : "";
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal text-left h-10"
+          data-ocid={`sales.plant.select.${ocidIndex}`}
+        >
+          <span className={`truncate ${!value ? "text-muted-foreground" : ""}`}>
+            {value ? displayLabel : (placeholder ?? "Select plant")}
+          </span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="p-0 w-[var(--radix-popover-trigger-width)]"
+        align="start"
+        data-ocid={`sales.plant.popover.${ocidIndex}`}
+      >
+        <Command>
+          <CommandInput
+            placeholder="Search plant..."
+            data-ocid={`sales.plant.search_input.${ocidIndex}`}
+          />
+          <CommandList>
+            <CommandEmpty>No plant found.</CommandEmpty>
+            {options.map((opt) => (
+              <CommandItem
+                key={opt.plantName}
+                value={opt.plantName}
+                onSelect={(v) => {
+                  onChange(v === value ? "" : v);
+                  setOpen(false);
+                }}
+                data-ocid={`sales.plant.item.${ocidIndex}`}
+              >
+                <span className="flex-1">{opt.plantName}</span>
+                <span className="text-xs text-muted-foreground ml-2">
+                  Stock: {opt.currentStock}
+                </span>
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Sales() {
   const queryClient = useQueryClient();
@@ -231,8 +320,8 @@ export default function Sales() {
   } = useGetInventory();
   const addSale = useAddSale();
   const deleteSale = useDeleteSale();
-  const { data: userRole } = useGetCallerUserRole();
-  const isOwner = userRole !== UserRole.user;
+  const { appRole } = usePinRole();
+  const isOwner = appRole === "owner";
 
   const [open, setOpen] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -470,27 +559,16 @@ export default function Sales() {
                         className="flex gap-2 items-end"
                       >
                         <div className="flex-1">
-                          <Select
+                          <PlantCombobox
                             value={item.plantName}
-                            onValueChange={(v) =>
-                              updateItem(idx, "plantName", v)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select plant" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(inventory ?? []).map((inv) => (
-                                <SelectItem
-                                  key={inv.plantName}
-                                  value={inv.plantName}
-                                >
-                                  {inv.plantName} (Stock:{" "}
-                                  {Number(inv.currentStock)})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            onChange={(v) => updateItem(idx, "plantName", v)}
+                            options={(inventory ?? []).map((inv) => ({
+                              plantName: inv.plantName,
+                              currentStock: Number(inv.currentStock),
+                            }))}
+                            placeholder="Select plant"
+                            ocidIndex={idx + 1}
+                          />
                         </div>
                         <div className="w-20">
                           <Input

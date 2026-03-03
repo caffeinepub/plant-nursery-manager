@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   BarChart3,
+  ClipboardList,
+  Eye,
+  EyeOff,
   LayoutDashboard,
   Loader2,
   LogIn,
@@ -16,16 +21,15 @@ import {
   X,
 } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
-import { UserRole } from "../backend";
+import { useEffect, useRef, useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useGetCallerUserRole } from "../hooks/useQueries";
+import { usePinRole } from "../hooks/usePinRole";
 
 interface NavItem {
   label: string;
   path: string;
   icon: React.ReactNode;
-  adminOnly?: boolean;
+  ownerOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -33,66 +37,250 @@ const navItems: NavItem[] = [
     label: "Dashboard",
     path: "/dashboard",
     icon: <LayoutDashboard className="w-5 h-5" />,
-    adminOnly: true,
+    ownerOnly: true,
   },
   {
     label: "Sales",
     path: "/sales",
     icon: <ShoppingCart className="w-5 h-5" />,
-    adminOnly: false,
+    ownerOnly: false,
   },
   {
     label: "Inventory",
     path: "/inventory",
     icon: <Package className="w-5 h-5" />,
-    adminOnly: true,
+    ownerOnly: false,
   },
   {
     label: "Expenditure",
     path: "/expenditure",
     icon: <TrendingDown className="w-5 h-5" />,
-    adminOnly: true,
+    ownerOnly: true,
   },
   {
     label: "Profit Analysis",
     path: "/profit-analysis",
     icon: <BarChart3 className="w-5 h-5" />,
-    adminOnly: true,
+    ownerOnly: true,
   },
   {
     label: "Manage Roles",
     path: "/manage-roles",
     icon: <ShieldCheck className="w-5 h-5" />,
-    adminOnly: true,
+    ownerOnly: true,
   },
   {
     label: "Priority Register",
     path: "/priority-register",
     icon: <Star className="w-5 h-5" />,
-    adminOnly: false,
+    ownerOnly: false,
+  },
+  {
+    label: "Daily Checklist",
+    path: "/daily-checklist",
+    icon: <ClipboardList className="w-5 h-5" />,
+    ownerOnly: false,
   },
 ];
 
+// ─── PIN Modal ─────────────────────────────────────────────────────────────────
+function PinModal({ onSuccess }: { onSuccess: () => void }) {
+  const { submitPin } = usePinRole();
+  const [selectedRole, setSelectedRole] = useState<"owner" | "clerk" | null>(
+    null,
+  );
+  const [pin, setPin] = useState("");
+  const [showPin, setShowPin] = useState(false);
+  const [error, setError] = useState("");
+  const [shake, setShake] = useState(false);
+  const pinRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (selectedRole) {
+      setTimeout(() => pinRef.current?.focus(), 50);
+    }
+  }, [selectedRole]);
+
+  const handleSubmit = () => {
+    if (!selectedRole) return;
+    const ok = submitPin(pin, selectedRole);
+    if (ok) {
+      onSuccess();
+    } else {
+      setError("Incorrect PIN. Please try again.");
+      setShake(true);
+      setPin("");
+      setTimeout(() => setShake(false), 500);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div
+        className={`bg-background rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 space-y-6 ${shake ? "animate-[shake_0.4s_ease-in-out]" : ""}`}
+        style={shake ? { animation: "shake 0.4s ease-in-out" } : {}}
+        data-ocid="pin.modal"
+      >
+        {/* Logo + Title */}
+        <div className="text-center space-y-2">
+          <img
+            src="/assets/generated/esearth-logo.dim_400x400.png"
+            alt="Esearth"
+            className="w-16 h-16 rounded-full mx-auto object-cover shadow"
+          />
+          <h2 className="text-xl font-bold text-foreground">Welcome Back</h2>
+          <p className="text-sm text-muted-foreground">
+            Select your role to continue
+          </p>
+        </div>
+
+        {/* Role Selection */}
+        {!selectedRole ? (
+          <div className="grid grid-cols-2 gap-3" data-ocid="pin.role.select">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedRole("owner");
+                setError("");
+              }}
+              className="flex flex-col items-center gap-2 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer"
+              data-ocid="pin.owner.button"
+            >
+              <ShieldCheck className="w-8 h-8 text-primary" />
+              <span className="font-semibold text-sm">Owner</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedRole("clerk");
+                setError("");
+              }}
+              className="flex flex-col items-center gap-2 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer"
+              data-ocid="pin.clerk.button"
+            >
+              <ShoppingCart className="w-8 h-8 text-primary" />
+              <span className="font-semibold text-sm">Clerk</span>
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Back + Role label */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedRole(null);
+                  setPin("");
+                  setError("");
+                }}
+                className="text-sm text-muted-foreground hover:text-foreground underline"
+                data-ocid="pin.back.button"
+              >
+                ← Back
+              </button>
+              <span className="text-sm font-medium capitalize text-primary ml-auto">
+                {selectedRole} Login
+              </span>
+            </div>
+
+            {/* PIN Input */}
+            <div className="space-y-2">
+              <Label htmlFor="pin-input">Enter PIN</Label>
+              <div className="relative">
+                <Input
+                  id="pin-input"
+                  ref={pinRef}
+                  type={showPin ? "text" : "password"}
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pin}
+                  placeholder="••••"
+                  onChange={(e) => {
+                    setPin(e.target.value.replace(/\D/g, ""));
+                    setError("");
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                  className="text-center text-2xl tracking-[0.5em] pr-10"
+                  data-ocid="pin.input"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPin((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                  data-ocid="pin.toggle"
+                >
+                  {showPin ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {error && (
+                <p
+                  className="text-sm text-destructive"
+                  data-ocid="pin.error_state"
+                >
+                  {error}
+                </p>
+              )}
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={handleSubmit}
+              disabled={pin.length < 4}
+              data-ocid="pin.submit_button"
+            >
+              Continue
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Shake keyframe */}
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ─── Main Layout ───────────────────────────────────────────────────────────────
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { identity, clear, login, loginStatus } = useInternetIdentity();
+  const { appRole, clearRole, triggerPinModal, showPinModal } = usePinRole();
   const queryClient = useQueryClient();
   const isAuthenticated = !!identity;
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const { data: userRole, isLoading: roleLoading } = useGetCallerUserRole();
+  // After II login completes, if no PIN role chosen yet → show PIN modal
+  useEffect(() => {
+    if (isAuthenticated && appRole === null) {
+      triggerPinModal();
+    }
+  }, [isAuthenticated, appRole, triggerPinModal]);
 
-  // UserRole.user is the "clerk" role in the backend enum
-  const isClerk = isAuthenticated && !roleLoading && userRole === UserRole.user;
+  const isClerk = appRole === "clerk";
+  const isOwner = appRole === "owner";
 
   const visibleNavItems = navItems.filter((item) => {
-    if (!isAuthenticated) return false;
-    if (item.adminOnly && isClerk) return false;
+    if (!isAuthenticated || appRole === null) return false;
+    if (item.ownerOnly && isClerk) return false;
     return true;
   });
 
   const handleLogout = async () => {
     await clear();
+    clearRole();
     queryClient.clear();
     setMobileOpen(false);
   };
@@ -104,6 +292,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       const err = error as Error;
       if (err?.message === "User is already authenticated") {
         await clear();
+        clearRole();
         setTimeout(() => login(), 300);
       }
     }
@@ -116,36 +305,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
     <>
-      {roleLoading && isAuthenticated ? (
-        <div className="flex items-center gap-2 px-3 py-2 text-sidebar-foreground/60 text-sm">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          Loading...
-        </div>
-      ) : (
-        visibleNavItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={onNavigate}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              }`}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          );
-        })
-      )}
+      {visibleNavItems.map((item) => {
+        const isActive = location.pathname === item.path;
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            onClick={onNavigate}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              isActive
+                ? "bg-primary text-primary-foreground"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            }`}
+          >
+            {item.icon}
+            {item.label}
+          </Link>
+        );
+      })}
     </>
   );
 
   return (
     <div className="min-h-screen flex bg-background">
+      {/* PIN Modal */}
+      {showPinModal && isAuthenticated && <PinModal onSuccess={() => {}} />}
+
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-sidebar border-r border-sidebar-border min-h-screen fixed left-0 top-0 bottom-0 z-30">
         {/* Logo */}
@@ -166,6 +351,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
+
+        {/* Role badge */}
+        {appRole && (
+          <div className="px-4 py-2 border-b border-sidebar-border">
+            <span
+              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${isOwner ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}
+            >
+              {isOwner ? (
+                <ShieldCheck className="w-3 h-3" />
+              ) : (
+                <ShoppingCart className="w-3 h-3" />
+              )}
+              {isOwner ? "Owner" : "Clerk"}
+            </span>
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
@@ -248,7 +449,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Mobile Sidebar Overlay */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-40 flex">
-          {/* Backdrop — accessible dismiss button */}
+          {/* Backdrop */}
           <button
             type="button"
             aria-label="Close menu"
@@ -274,6 +475,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </p>
               </div>
             </div>
+            {appRole && (
+              <div className="px-4 py-2 border-b border-sidebar-border">
+                <span
+                  className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${isOwner ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}
+                >
+                  {isOwner ? (
+                    <ShieldCheck className="w-3 h-3" />
+                  ) : (
+                    <ShoppingCart className="w-3 h-3" />
+                  )}
+                  {isOwner ? "Owner" : "Clerk"}
+                </span>
+              </div>
+            )}
             <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
               <NavLinks onNavigate={() => setMobileOpen(false)} />
             </nav>

@@ -11,12 +11,11 @@ import {
 import { ThemeProvider } from "next-themes";
 import type React from "react";
 import { useEffect } from "react";
-import { UserRole } from "./backend";
 import Layout from "./components/Layout";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
-import { useGetCallerUserRole } from "./hooks/useQueries";
+import { usePinRole } from "./hooks/usePinRole";
 
-// Pages — Dashboard uses a named export
+import DailyChecklist from "./pages/DailyChecklist";
 import { Dashboard } from "./pages/Dashboard";
 import Expenditure from "./pages/Expenditure";
 import Inventory from "./pages/Inventory";
@@ -27,21 +26,21 @@ import Sales from "./pages/Sales";
 
 const queryClient = new QueryClient();
 
-// Route guard: redirects clerk users (UserRole.user) away from admin-only pages
+// Route guard: redirects clerk users away from owner-only pages
 function ClerkGuard({ children }: { children: React.ReactNode }) {
-  const { data: userRole, isLoading } = useGetCallerUserRole();
+  const { appRole } = usePinRole();
   const { identity } = useInternetIdentity();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!identity || isLoading) return;
-    if (userRole === UserRole.user) {
+    if (!identity || appRole === null) return;
+    if (appRole === "clerk") {
       navigate({ to: "/sales" });
     }
-  }, [identity, isLoading, userRole, navigate]);
+  }, [identity, appRole, navigate]);
 
-  if (!identity || isLoading) return <>{children}</>;
-  if (userRole === UserRole.user) return null;
+  if (!identity || appRole === null) return <>{children}</>;
+  if (appRole === "clerk") return null;
 
   return <>{children}</>;
 }
@@ -49,18 +48,17 @@ function ClerkGuard({ children }: { children: React.ReactNode }) {
 // Index redirect: sends authenticated users to the right page based on role
 function IndexRedirect() {
   const { identity } = useInternetIdentity();
-  const { data: userRole, isLoading } = useGetCallerUserRole();
+  const { appRole } = usePinRole();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!identity) return;
-    if (isLoading) return;
-    if (userRole === UserRole.user) {
+    if (!identity || appRole === null) return;
+    if (appRole === "clerk") {
       navigate({ to: "/sales" });
     } else {
       navigate({ to: "/dashboard" });
     }
-  }, [identity, isLoading, userRole, navigate]);
+  }, [identity, appRole, navigate]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">
@@ -118,11 +116,7 @@ const salesRoute = createRoute({
 const inventoryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/inventory",
-  component: () => (
-    <ClerkGuard>
-      <Inventory />
-    </ClerkGuard>
-  ),
+  component: Inventory,
 });
 
 const expenditureRoute = createRoute({
@@ -161,6 +155,12 @@ const priorityRegisterRoute = createRoute({
   component: PriorityRegister,
 });
 
+const dailyChecklistRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/daily-checklist",
+  component: DailyChecklist,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardRoute,
@@ -170,6 +170,7 @@ const routeTree = rootRoute.addChildren([
   profitAnalysisRoute,
   manageRolesRoute,
   priorityRegisterRoute,
+  dailyChecklistRoute,
 ]);
 
 const router = createRouter({ routeTree });
