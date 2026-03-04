@@ -1,5 +1,4 @@
 import { Toaster } from "@/components/ui/sonner";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   RouterProvider,
@@ -23,8 +22,6 @@ import ManageRoles from "./pages/ManageRoles";
 import PriorityRegister from "./pages/PriorityRegister";
 import ProfitAnalysis from "./pages/ProfitAnalysis";
 import Sales from "./pages/Sales";
-
-const queryClient = new QueryClient();
 
 // Route guard: redirects clerk users away from owner-only pages
 function ClerkGuard({ children }: { children: React.ReactNode }) {
@@ -184,10 +181,8 @@ declare module "@tanstack/react-router" {
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        <Toaster richColors position="top-right" />
-      </QueryClientProvider>
+      <RouterProvider router={router} />
+      <Toaster richColors position="top-right" />
     </ThemeProvider>
   );
 }
