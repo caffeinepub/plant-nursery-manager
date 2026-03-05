@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,15 @@ import {
   useUpdateInventoryItem,
 } from "../hooks/useQueries";
 import { exportToExcel } from "../utils/excelExport";
+
+/** Safely convert a string to BigInt; returns 0n on failure */
+function safeBigInt(value: string): bigint {
+  const trimmed = value.trim();
+  if (!trimmed) return 0n;
+  const num = Number(trimmed);
+  if (!Number.isFinite(num) || num < 0) return 0n;
+  return BigInt(Math.floor(num));
+}
 
 const CATEGORIES = [
   "Flowering Plants",
@@ -168,7 +178,6 @@ export default function Inventory() {
   const { appRole } = usePinRole();
   const isOwner = appRole === "owner";
 
-  const [addOpen, setAddOpen] = useState(false);
   const [movementOpen, setMovementOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [selectedPlant, setSelectedPlant] = useState<string>("");
@@ -209,24 +218,36 @@ export default function Inventory() {
   });
 
   const handleAddPlant = async () => {
-    if (!newPlant.plantName || !newPlant.category) return;
-    await addItem.mutateAsync({
-      plantName: newPlant.plantName,
-      category: newPlant.category,
-      unit: newPlant.unit,
-      currentStock: BigInt(newPlant.currentStock || "0"),
-      costPrice: BigInt(newPlant.costPrice || "0"),
-      sellingPrice: BigInt(newPlant.sellingPrice || "0"),
-    } as InventoryItem);
-    setNewPlant({
-      plantName: "",
-      category: "",
-      unit: "piece",
-      currentStock: "",
-      costPrice: "",
-      sellingPrice: "",
-    });
-    setAddOpen(false);
+    if (!newPlant.plantName.trim()) {
+      toast.error("Plant name is required");
+      return;
+    }
+    if (!newPlant.category) {
+      toast.error("Category is required");
+      return;
+    }
+    try {
+      await addItem.mutateAsync({
+        plantName: newPlant.plantName.trim(),
+        category: newPlant.category,
+        unit: newPlant.unit,
+        currentStock: safeBigInt(newPlant.currentStock),
+        costPrice: safeBigInt(newPlant.costPrice),
+        sellingPrice: safeBigInt(newPlant.sellingPrice),
+      } as InventoryItem);
+      toast.success(`${newPlant.plantName.trim()} added to inventory`);
+      setNewPlant({
+        plantName: "",
+        category: "",
+        unit: "piece",
+        currentStock: "",
+        costPrice: "",
+        sellingPrice: "",
+      });
+    } catch (err) {
+      console.error("Failed to add plant:", err);
+      toast.error("Failed to add plant. Please try again.");
+    }
   };
 
   const handleRecordMovement = async () => {
@@ -290,9 +311,9 @@ export default function Inventory() {
         plantName: editingPlant,
         category: editForm.category,
         unit: editForm.unit,
-        currentStock: BigInt(editForm.currentStock || "0"),
-        costPrice: BigInt(editForm.costPrice || "0"),
-        sellingPrice: BigInt(editForm.sellingPrice || "0"),
+        currentStock: safeBigInt(editForm.currentStock),
+        costPrice: safeBigInt(editForm.costPrice),
+        sellingPrice: safeBigInt(editForm.sellingPrice),
       } as InventoryItem,
     });
     toast.success(`${editingPlant} updated successfully`);
@@ -318,6 +339,7 @@ export default function Inventory() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* ── Page Header ── */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Inventory</h1>
@@ -415,7 +437,7 @@ export default function Inventory() {
                     </Select>
                     {isOutwardMovement(movement.reason) && (
                       <p className="text-xs text-destructive mt-1">
-                        ⚠ This will reduce the current stock by the entered
+                        This will reduce the current stock by the entered
                         quantity.
                       </p>
                     )}
@@ -478,145 +500,157 @@ export default function Inventory() {
               </DialogContent>
             </Dialog>
           )}
-
-          {/* Add Plant — owner only */}
-          {isOwner && (
-            <Dialog open={addOpen} onOpenChange={setAddOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Plant
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add New Plant</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-2">
-                  <div>
-                    <Label>Plant Name</Label>
-                    <Input
-                      placeholder="e.g. Rose"
-                      value={newPlant.plantName}
-                      onChange={(e) =>
-                        setNewPlant((p) => ({
-                          ...p,
-                          plantName: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>Category</Label>
-                    <Select
-                      value={newPlant.category}
-                      onValueChange={(v) =>
-                        setNewPlant((p) => ({ ...p, category: v }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Unit</Label>
-                    <Select
-                      value={newPlant.unit}
-                      onValueChange={(v) =>
-                        setNewPlant((p) => ({ ...p, unit: v }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {UNITS.map((u) => (
-                          <SelectItem key={u} value={u}>
-                            {u}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <Label>Initial Stock</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        value={newPlant.currentStock}
-                        onChange={(e) =>
-                          setNewPlant((p) => ({
-                            ...p,
-                            currentStock: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Cost Price</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="₹0"
-                        value={newPlant.costPrice}
-                        onChange={(e) =>
-                          setNewPlant((p) => ({
-                            ...p,
-                            costPrice: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Selling Price</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="₹0"
-                        value={newPlant.sellingPrice}
-                        onChange={(e) =>
-                          setNewPlant((p) => ({
-                            ...p,
-                            sellingPrice: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={handleAddPlant}
-                    disabled={
-                      addItem.isPending ||
-                      !newPlant.plantName ||
-                      !newPlant.category
-                    }
-                  >
-                    {addItem.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
-                        Adding...
-                      </>
-                    ) : (
-                      "Add Plant"
-                    )}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
         </div>
       </div>
+
+      {/* ── Add Stock Card (Owner only) — prominent, always visible at top ── */}
+      {isOwner && (
+        <Card
+          className="border-2 border-primary/30 bg-primary/5 shadow-md"
+          data-ocid="inventory.add_stock.card"
+        >
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-primary">
+              <Plus className="h-5 w-5" />
+              Add New Plant to Stock
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">
+                  Plant Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  placeholder="e.g. Rose, Jasmine, Tulsi"
+                  value={newPlant.plantName}
+                  onChange={(e) =>
+                    setNewPlant((p) => ({ ...p, plantName: e.target.value }))
+                  }
+                  className="h-10 text-base"
+                  data-ocid="inventory.plant_name.input"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">
+                  Category <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={newPlant.category}
+                  onValueChange={(v) =>
+                    setNewPlant((p) => ({ ...p, category: v }))
+                  }
+                >
+                  <SelectTrigger
+                    className="h-10 text-base"
+                    data-ocid="inventory.category.select"
+                  >
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Unit</Label>
+                <Select
+                  value={newPlant.unit}
+                  onValueChange={(v) => setNewPlant((p) => ({ ...p, unit: v }))}
+                >
+                  <SelectTrigger
+                    className="h-10 text-base"
+                    data-ocid="inventory.unit.select"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {UNITS.map((u) => (
+                      <SelectItem key={u} value={u}>
+                        {u}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Initial Stock Qty</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={newPlant.currentStock}
+                  onChange={(e) =>
+                    setNewPlant((p) => ({ ...p, currentStock: e.target.value }))
+                  }
+                  className="h-10 text-base"
+                  data-ocid="inventory.stock.input"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Cost Price (₹)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="₹0"
+                  value={newPlant.costPrice}
+                  onChange={(e) =>
+                    setNewPlant((p) => ({ ...p, costPrice: e.target.value }))
+                  }
+                  className="h-10 text-base"
+                  data-ocid="inventory.cost_price.input"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Selling Price (₹)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="₹0"
+                  value={newPlant.sellingPrice}
+                  onChange={(e) =>
+                    setNewPlant((p) => ({
+                      ...p,
+                      sellingPrice: e.target.value,
+                    }))
+                  }
+                  className="h-10 text-base"
+                  data-ocid="inventory.selling_price.input"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto px-8 text-base font-semibold"
+                onClick={handleAddPlant}
+                disabled={
+                  addItem.isPending ||
+                  !newPlant.plantName.trim() ||
+                  !newPlant.category
+                }
+                data-ocid="inventory.add_plant.primary_button"
+              >
+                {addItem.isPending ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Adding Plant...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-5 w-5 mr-2" />
+                    Add Plant to Inventory
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Inventory Table */}
       {isLoading ? (

@@ -7,12 +7,12 @@ import List "mo:core/List";
 import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Order "mo:core/Order";
-
+import Migration "migration";
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-
+(with migration = Migration.run)
 actor {
   var accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -158,8 +158,6 @@ actor {
     };
   };
 
-  // User profile management
-
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -181,10 +179,7 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Role management
-
   public shared ({ caller }) func assignRole(user : Principal, role : AccessControl.UserRole) : async () {
-    // AccessControl.assignRole includes admin-only guard internally
     AccessControl.assignRole(accessControlState, caller, user, role);
   };
 
@@ -192,14 +187,11 @@ actor {
     AccessControl.getUserRole(accessControlState, caller);
   };
 
-  // Sales and Inventory Management
-
   public shared ({ caller }) func addSale(sale : SalesRecord) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can add sales");
     };
 
-    // Update inventory for each item in the sale
     for (item in sale.items.values()) {
       switch (inventory.get(item.plantName)) {
         case (null) { () };
@@ -215,7 +207,6 @@ actor {
       };
     };
 
-    // Generate new billing number
     let billingNumber = "INV-" # billingCounter.toText();
     let updatedSale = { sale with billingNumber };
     persistentSales.add(updatedSale);
@@ -231,7 +222,6 @@ actor {
     persistentSales.toArray();
   };
 
-  // Get sales by plant function
   public query ({ caller }) func getSalesByPlant(plantName : Text, startDate : Text, endDate : Text) : async (Nat, Nat) {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view sales");
@@ -254,8 +244,6 @@ actor {
     );
     (totalQuantity, totalRevenue);
   };
-
-  // Inventory management
 
   public shared ({ caller }) func addInventoryItem(item : InventoryItem) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -296,13 +284,11 @@ actor {
     inventory.values().toArray();
   };
 
-  // Stock movements
   public shared ({ caller }) func recordStockMovement(plantName : Text, movement : StockMovement) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can update stock movements");
     };
 
-    // Add new movement entry to persistent array
     let existingMovements = switch (stockMovements.get(plantName)) {
       case (null) { [] };
       case (?movements) { movements };
@@ -310,7 +296,6 @@ actor {
     let newMovements = existingMovements.concat([movement]);
     stockMovements.add(plantName, newMovements);
 
-    // Update inventory quantity on every movement entry (add or remove)
     switch (inventory.get(plantName)) {
       case (null) {
         let newItem : InventoryItem = {
@@ -348,8 +333,6 @@ actor {
     };
   };
 
-  // Expenditures
-
   public shared ({ caller }) func addExpenditure(exp : Expenditure) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can add expenditures");
@@ -363,8 +346,6 @@ actor {
     };
     expenditures.values().toArray().sort();
   };
-
-  // Invoices
 
   public shared ({ caller }) func createInvoice(invoice : Invoice) : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -386,8 +367,6 @@ actor {
       case (?invoice) { invoice };
     };
   };
-
-  // Priority Requests Feature
 
   public shared ({ caller }) func addPriorityRequest(request : PriorityRequestCreate) : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -425,34 +404,29 @@ actor {
       Runtime.trap("Unauthorized: Only users can update priority requests");
     };
 
-    // Filter the requests to exclude the one with the matching id
-    let filteredRequests = priorityRequests.filter(
-      func(request) {
-        request.id != id;
-      }
-    );
-
-    // Clear the current list and add the filtered requests back
-    priorityRequests.clear();
-    priorityRequests.addAll(filteredRequests.values());
-
-    // Add the updated request if it was found
-    let existingRequest = priorityRequests.find(
-      func(request) {
-        request.id == id;
-      }
-    );
-
-    switch (existingRequest) {
-      case (null) { () };
-      case (?request) {
-        let updatedRequest = { request with status = status; deliveryDate = deliveryDate };
-        priorityRequests.add(updatedRequest);
+    var index = 0;
+    var foundIndex : ?Nat = null;
+    let requests = priorityRequests.toArray();
+    if (requests.size() > 0) {
+      while (foundIndex == null and index < requests.size()) {
+        if (requests[index].id == id) {
+          foundIndex := ?index;
+        } else {
+          index += 1;
+        };
       };
+    };
+
+    switch (foundIndex) {
+      case (?found) {
+        let updatedRequests = requests.concat([{ requests[found] with status = status; deliveryDate = deliveryDate }]);
+        priorityRequests.clear();
+        priorityRequests.addAll(updatedRequests.values());
+      };
+      case (null) { () };
     };
   };
 
-  // Delete sale (admin only)
   public shared ({ caller }) func deleteSale(billingNumber : Text) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can delete sales");

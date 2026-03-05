@@ -820,7 +820,7 @@ export default function Sales() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {[...filteredSales].reverse().map((sale, idx) => (
+                  {filteredSales.map((sale, idx) => (
                     <TableRow key={sale.billingNumber || `sale-${idx}`}>
                       <TableCell>
                         <span className="font-mono text-sm font-semibold text-primary">

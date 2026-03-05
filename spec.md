@@ -1,25 +1,33 @@
 # Esearth Nursery Manager
 
 ## Current State
-- Dashboard shows 4 fixed stat cards (Today's Sales, Transactions, Expenditure, Net Profit), area charts, recent transactions list, and low stock alerts.
-- Recent transactions are computed with `.reverse()` but sorted by salesRecords array order (oldest first effectively).
-- Priority Register shows all requests (pending and fulfilled) in a single sorted table. Fulfilled requests appear in the same table but users report they "vanish" — the table has no tab separation, so when all items are fulfilled nothing is clearly visible as history.
-- Dashboard stat cards have no customize/reorder functionality.
+
+A full-stack plant nursery management app with:
+- Internet Identity login + PIN-based role selector (Owner PIN: 1006, Clerk PIN: 2026)
+- Sales recording with inventory auto-deduction, billing numbers, thermal invoice PDF
+- Inventory management (add/edit/delete, stock movements, history)
+- Expenditure tracking
+- Profit analysis
+- Dashboard with charts
+- Priority Register (customer future plant requests)
+- Daily Checklist
 
 ## Requested Changes (Diff)
 
 ### Add
-- Dashboard: "Customize" button (only visible to Owner role) that opens a panel/dialog where each stat card can be resized (normal / wide) and reordered via up/down controls. Preferences saved to localStorage.
-- Priority Register: Tab navigation with "Active (Pending)" tab and "History (Fulfilled)" tab. Fulfilled requests go to the History tab instead of the main list, so they are never hidden.
+- Nothing new
 
 ### Modify
-- Dashboard: Fix `recentTransactions` to sort by date descending (newest first), not just `.reverse()` which relies on insertion order.
-- Priority Register: Default view shows only Pending requests. Fulfilled requests shown in History tab.
+- Fix `updatePriorityRequestStatus` backend bug: the function incorrectly looked up the request AFTER removing it from the list, so status updates (pending → fulfilled) never persisted. Fix: find the request FIRST, then filter and re-add with updated status.
+- The billing counter and daily billing number logic should remain as-is.
 
 ### Remove
-- Nothing removed.
+- Nothing
 
 ## Implementation Plan
-1. **Dashboard.tsx** — Fix `recentTransactions` useMemo to sort by `date` descending, then take top 5.
-2. **Dashboard.tsx** — Add `dashboardCardOrder` + `dashboardCardSize` state (loaded from localStorage). Add a "Customize" button near the Today's Summary heading. Add a customize drawer/dialog that lists each stat card with up/down reorder arrows and a size toggle (normal/wide). Apply order and size when rendering the grid.
-3. **PriorityRegister.tsx** — Add a tab state (`active` | `history`). Filter `sorted` into `pending` and `fulfilled` arrays. Render two tabs: "Active" shows pending, "History" shows fulfilled. Both tabs show the same table columns.
+
+1. Regenerate backend Motoko with corrected `updatePriorityRequestStatus` logic:
+   - Find existing request before modifying the list
+   - Remove old entry, then add updated entry with new status and deliveryDate
+2. Keep all other backend functions identical to current state
+3. No frontend changes needed for this fix (frontend `PinRoleProvider` fix already applied in main.tsx; sales table reverse() fix already applied)
