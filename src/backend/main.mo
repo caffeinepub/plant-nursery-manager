@@ -7,12 +7,10 @@ import List "mo:core/List";
 import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Order "mo:core/Order";
-import Migration "migration";
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-(with migration = Migration.run)
 actor {
   var accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -253,8 +251,8 @@ actor {
   };
 
   public shared ({ caller }) func deleteInventoryItem(plantName : Text) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can delete inventory items");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can delete inventory items");
     };
     if (not inventory.containsKey(plantName)) {
       Runtime.trap("Inventory item not found");
@@ -263,8 +261,8 @@ actor {
   };
 
   public shared ({ caller }) func updateInventoryItem(plantName : Text, updatedItem : InventoryItem) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can update inventory items");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can update inventory items");
     };
 
     let existingItem = inventory.get(plantName);
@@ -428,8 +426,8 @@ actor {
   };
 
   public shared ({ caller }) func deleteSale(billingNumber : Text) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can delete sales");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can delete sales");
     };
 
     let filteredSales = persistentSales.filter(

@@ -79,7 +79,16 @@ const CATEGORIES = [
   "Outdoor Plants",
   "Other",
 ];
-const UNITS = ["piece", "pot", "kg", "bundle", "tray", "dozen"];
+const UNITS = [
+  "piece",
+  "pot",
+  "kg",
+  "bundle",
+  "tray",
+  "dozen",
+  "numbers",
+  "sq.ft",
+];
 
 function MovementHistory({ plantName }: { plantName: string }) {
   const { data: movements, isLoading } = useGetStockMovements(plantName);
